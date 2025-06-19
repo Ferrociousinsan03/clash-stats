@@ -5,55 +5,56 @@ const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// 🟡 Your GitHub raw repo CDN path:
+const IMAGE_BASE = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/';
+const slugify = name => name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
+
 app.use(express.static('public'));
-app.use(express.json());
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.urlencoded({ extended: true }));
 
-// Generate slug from name
-function slugify(name) {
-  return name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
-}
-
-// Base URL for images from a reliable Clash of Clans asset repository
-const IMAGE_BASE = 'https://raw.githubusercontent.com/arenclash/coc-assets/main/';
+app.get('/', (req, res) => {
+  res.render('index', { player: null, error: null });
+});
 
 app.post('/player', async (req, res) => {
+  const tag = req.body.tag?.replace('#', '').toUpperCase();
+  if (!tag) return res.render('index', { player: null, error: 'Please enter a valid tag.' });
+
   try {
-    const tag = req.body.tag?.replace('#', '').toUpperCase();
     const { data } = await axios.get(`https://api.clashofclans.com/v1/players/%23${tag}`, {
-      headers: { Authorization: `Bearer ${process.env.COC_API_TOKEN}` }
+      headers: {
+        Authorization: `Bearer ${process.env.COC_API_TOKEN}`
+      }
     });
 
-    // Map troops, heroes & spells with auto-generated image URLs
-    const troops = (data.troops || []).map(t => ({
-      name: t.name,
-      level: t.level,
-      image: `${IMAGE_BASE}troops/${slugify(t.name)}.png`
-    }));
-    const heroes = (data.heroes || []).map(h => ({
-      name: h.name,
-      level: h.level,
-      image: `${IMAGE_BASE}heroes/${slugify(h.name)}.png`
-    }));
-    const spells = (data.spells || []).map(s => ({
-      name: s.name,
-      level: s.level,
-      image: `${IMAGE_BASE}spells/${slugify(s.name)}.png`
-    }));
+    const mapAssets = (items, folder) =>
+      (items || []).map(item => ({
+        name: item.name,
+        level: item.level,
+        image: `${IMAGE_BASE}${folder}/${slugify(item.name)}.png`
+      }));
 
-    // Town Hall image
-    const townHallImage = `${IMAGE_BASE}townhalls/th${data.townHallLevel}.png`;
-
-    res.json({
+    const player = {
       name: data.name,
       expLevel: data.expLevel,
       clan: data.clan?.name || 'No Clan',
       townHallLevel: data.townHallLevel,
-      townHallImage,
-      troops, heroes, spells
-    });
-  } catch (err) {
-    res.status(400).json({ error: 'Player not found or API error.' });
+      townHallImage: `${IMAGE_BASE}townhalls/th${data.townHallLevel}.png`,
+      troops: mapAssets(data.troops, 'troops'),
+      heroes: mapAssets(data.heroes, 'heroes'),
+      spells: mapAssets(data.spells, 'spells')
+    };
+
+    res.render('index', { player, error: null });
+
+  } catch {
+    res.render('index', { player: null, error: 'Player not found or API error.' });
   }
 });
 
-app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+});
