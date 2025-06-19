@@ -1,28 +1,29 @@
-// public/script.js
+// helper to grab one element
+const $ = sel => document.querySelector(sel);
 
-// simple selector
-const $ = s => document.querySelector(s);
-
-// build an icon+label card
+// build an icon + label card
 function makeCard(img, label) {
   const d = document.createElement('div');
   d.className = 'card';
-  d.innerHTML = `<img src="${img}" onerror="this.src='';" alt="${label}" />
-                 <p>${label}</p>`;
+  d.innerHTML = `
+    <img src="${img}" onerror="this.src='';" alt="${label}" />
+    <p>${label}</p>
+  `;
   return d;
 }
 
+// normalize names to lowercase_underscores
 function normalize(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
 }
 
 async function fetchAll(tag) {
-  // 1) get player JSON
+  // 1) player stats
   const res = await fetch(`/api/player/${tag}`);
   if (!res.ok) throw new Error('Player not found');
   const stats = await res.json();
 
-  // 2) get metadata in parallel
+  // 2) metadata (troops & heroes)
   const [troopsMeta, heroesMeta] = await Promise.all([
     fetch('/api/meta/troops').then(r => r.json()),
     fetch('/api/meta/heroes').then(r => r.json())
@@ -31,8 +32,10 @@ async function fetchAll(tag) {
   // Town Hall
   $('#townhall').innerHTML = '<h2>Town Hall</h2><div class="cards"></div>';
   $('#townhall .cards').appendChild(
-    makeCard(`/images/townhalls/${stats.townHallLevel}.png`, 
-             `Town Hall L${stats.townHallLevel}`)
+    makeCard(
+      `/images/townhalls/${stats.townHallLevel}.png`,
+      `Town Hall L${stats.townHallLevel}`
+    )
   );
 
   // Troops
@@ -71,7 +74,7 @@ async function fetchAll(tag) {
   }
 }
 
-// wire up button
+// wire up the button
 $('#fetchBtn').onclick = () => {
   const raw = $('#tagInput').value.trim();
   if (!raw) return alert('Enter a tag');
