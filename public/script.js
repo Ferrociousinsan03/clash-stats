@@ -1,41 +1,40 @@
 // public/script.js
+
+// 1) Define $ globally
+const $ = selector => document.querySelector(selector);
+
+// 2) Wait for DOM to be ready before binding
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('DOM ready, binding click handler');
+  console.log('DOM loaded, binding Fetch button');
 
-  const $ = s => document.querySelector(s);
-  const fetchBtn = $('#fetchBtn');
-  const tagInput = $('#tagInput');
+  const btn = $('#fetchBtn');
+  const input = $('#tagInput');
 
-  if (!fetchBtn || !tagInput) {
-    console.error('Could not find #fetchBtn or #tagInput in the DOM');
+  if (!btn || !input) {
+    console.error('Missing #fetchBtn or #tagInput');
     return;
   }
 
-  fetchBtn.addEventListener('click', () => {
-    console.log('Fetch button clicked');
-    const raw = tagInput.value.trim();
+  btn.addEventListener('click', () => {
+    console.log('Fetch clicked');
+    const raw = input.value.trim();
     if (!raw) {
-      return alert('Please enter a player tag (without the #)');
+      return alert('Enter a player tag (no #)');
     }
     const tag = encodeURIComponent(raw.replace(/^#/, ''));
-    fetchAll(tag).catch(err => {
-      console.error('fetchAll error:', err);
-      alert(err.message);
+    fetchAll(tag).catch(e => {
+      console.error(e);
+      alert(e.message);
     });
   });
 });
 
 
-function makeCard(img, label) {
-  const d = document.createElement('div');
-  d.className = 'card';
-  d.innerHTML = `<img src="${img}" onerror="this.src='';" alt="${label}" /><p>${label}</p>`;
-  return d;
-}
-
+// 3) fetchAll remains as before:
 async function fetchAll(tag) {
-  console.log('Calling /api/player/', tag);
-  // 1) fetch player
+  console.log('Fetching player', tag);
+
+  // Fetch player data
   const p = await fetch(`/api/player/${tag}`);
   if (!p.ok) {
     const err = await p.json();
@@ -43,13 +42,13 @@ async function fetchAll(tag) {
   }
   const stat = await p.json();
 
-  // 2) fetch metadata
-  const [troopsMetaRaw, heroesMetaRaw] = await Promise.all([
+  // Fetch metadata
+  const [tRaw, hRaw] = await Promise.all([
     fetch('/api/meta/troops').then(r => r.json()),
     fetch('/api/meta/heroes').then(r => r.json())
   ]);
-  const troopsMeta = troopsMetaRaw.items;
-  const heroesMeta = heroesMetaRaw.items;
+  const troopsMeta = tRaw.items;
+  const heroesMeta = hRaw.items;
 
   // Town Hall
   $('#townhall').innerHTML = '<h2>Town Hall</h2><div class="cards"></div>';
@@ -60,7 +59,7 @@ async function fetchAll(tag) {
   $('#troops').innerHTML = '<h2>Troops</h2><div class="cards"></div>';
   stat.troops.forEach(t => {
     if (t.level > 0) {
-      const def  = troopsMeta.find(x => x.name === t.name);
+      const def = troopsMeta.find(x => x.name === t.name);
       const icon = def?.iconUrls?.small || '';
       $('#troops .cards').appendChild(makeCard(icon, `${t.name} L${t.level}`));
     }
@@ -70,7 +69,7 @@ async function fetchAll(tag) {
   $('#heroes').innerHTML = '<h2>Heroes</h2><div class="cards"></div>';
   stat.heroes.forEach(h => {
     if (h.level > 0) {
-      const def  = heroesMeta.find(x => x.name === h.name);
+      const def = heroesMeta.find(x => x.name === h.name);
       const icon = def?.iconUrls?.small || '';
       $('#heroes .cards').appendChild(makeCard(icon, `${h.name} L${h.level}`));
     }
@@ -87,4 +86,12 @@ async function fetchAll(tag) {
   } else {
     $('#equipment .cards').innerHTML = '<p>No equipment</p>';
   }
+}
+
+// 4) helper to create a card
+function makeCard(img, label) {
+  const d = document.createElement('div');
+  d.className = 'card';
+  d.innerHTML = `<img src="${img}" onerror="this.src='';" alt="${label}" /><p>${label}</p>`;
+  return d;
 }
