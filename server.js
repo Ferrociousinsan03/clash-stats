@@ -1,3 +1,4 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
 const fetch   = require('node-fetch');
@@ -7,45 +8,46 @@ const PORT     = process.env.PORT || 3000;
 const API_BASE = 'https://api.clashofclans.com/v1';
 const API_KEY  = process.env.CLASH_API_KEY;
 
-// Serve static files from public/
+// Serve static files from /public
 app.use(express.static('public'));
 
-// Proxy metadata for troops
-app.get('/api/meta/troops', async (req, res) => {
+// Proxy the metadata endpoints so the browser can access icon URLs
+async function proxy(path, res) {
   try {
-    const r = await fetch(`${API_BASE}/metadata/troops`, {
-      headers: { Authorization: `Bearer ${API_KEY}` }
-    });
-    const data = await r.json();
-    res.json(data);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Proxy metadata for heroes
-app.get('/api/meta/heroes', async (req, res) => {
-  try {
-    const r = await fetch(`${API_BASE}/metadata/heroes`, {
-      headers: { Authorization: `Bearer ${API_KEY}` }
-    });
-    const data = await r.json();
-    res.json(data);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// Fetch a player by tag
-app.get('/api/player/:tag', async (req, res) => {
-  try {
-    const rawTag = req.params.tag.replace(/^#/, '');
-    const tag    = encodeURIComponent('#' + rawTag);
-    const r      = await fetch(`${API_BASE}/players/${tag}`, {
-      headers: { Authorization: `Bearer ${API_KEY}` }
+    const r = await fetch(`${API_BASE}${path}`, {
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        Accept: 'application/json'
+      }
     });
     if (!r.ok) {
-      return res.status(r.status).json({ error: r.statusText });
+      const txt = await r.text();
+      return res.status(r.status).json({ error: txt || r.statusText });
+    }
+    const data = await r.json();
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+}
+app.get('/api/meta/troops', (req, res) => proxy('/metadata/troops', res));
+app.get('/api/meta/heroes', (req, res) => proxy('/metadata/heroes', res));
+
+// Fetch player by tag
+app.get('/api/player/:tag', async (req, res) => {
+  try {
+    const raw = req.params.tag.replace(/^#/, '');
+    const tag = encodeURIComponent('#' + raw);
+    const r   = await fetch(`${API_BASE}/players/${tag}`, {
+      headers: {
+        Authorization: `Bearer ${API_KEY}`,
+        Accept: 'application/json'
+      }
+    });
+    if (!r.ok) {
+      // forward the status and message
+      const msg = await r.text();
+      return res.status(r.status).json({ error: msg || r.statusText });
     }
     const data = await r.json();
     res.json(data);
@@ -54,6 +56,5 @@ app.get('/api/player/:tag', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
-});
+// Start server
+app.listen(PORT, () => console.log(`🚀 Listening on ${PORT}`));
