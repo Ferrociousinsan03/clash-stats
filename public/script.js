@@ -1,7 +1,7 @@
-// helper to grab one element
-const $ = sel => document.querySelector(sel);
+// public/script.js
 
-// build an icon + label card
+const $ = s => document.querySelector(s);
+
 function makeCard(img, label) {
   const d = document.createElement('div');
   d.className = 'card';
@@ -12,18 +12,20 @@ function makeCard(img, label) {
   return d;
 }
 
-// normalize names to lowercase_underscores
 function normalize(name) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
 }
 
 async function fetchAll(tag) {
-  // 1) player stats
-  const res = await fetch(`/api/player/${tag}`);
-  if (!res.ok) throw new Error('Player not found');
-  const stats = await res.json();
+  // 1) get player
+  const p = await fetch(`/api/player/${tag}`);
+  if (!p.ok) {
+    const err = await p.json();
+    throw new Error(err.error || 'Unknown error');
+  }
+  const stats = await p.json();
 
-  // 2) metadata (troops & heroes)
+  // 2) get metadata
   const [troopsMeta, heroesMeta] = await Promise.all([
     fetch('/api/meta/troops').then(r => r.json()),
     fetch('/api/meta/heroes').then(r => r.json())
@@ -74,10 +76,9 @@ async function fetchAll(tag) {
   }
 }
 
-// wire up the button
 $('#fetchBtn').onclick = () => {
   const raw = $('#tagInput').value.trim();
-  if (!raw) return alert('Enter a tag');
+  if (!raw) return alert('Enter a player tag');
   const tag = encodeURIComponent(raw.replace(/^#/, ''));
   fetchAll(tag).catch(err => alert(err.message));
 };
