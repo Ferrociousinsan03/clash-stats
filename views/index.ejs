@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Clash of Clans Stats</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <h1>Clash of Clans Player Stats</h1>
+
+  <form method="POST" action="/player">
+    <input type="text" name="tag" placeholder="#TAG" required>
+    <button type="submit">Search</button>
+  </form>
+
+  <% if (error) { %>
+    <p class="error"><%= error %></p>
+  <% } %>
+
+  <% if (player) { %>
+    <h2><%= player.name %> (Level <%= player.expLevel %>)</h2>
+    <p>Clan: <%= player.clan %></p>
+    <img src="<%= player.townHallImage %>" alt="Town Hall <%= player.townHallLevel %>">
+    <p>Town Hall Level: <%= player.townHallLevel %></p>
+
+    <% const renderGrid = (title, items) => { %>
+      <% if (items.length) { %>
+        <h3><%= title %></h3>
+        <div class="grid">
+          <% items.forEach(item => { %>
+            <div class="card">
+              <img src="<%= item.image %>" alt="<%= item.name %>">
+              <p><strong><%= item.name %></strong></p>
+              <p>Level <%= item.level %></p>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    <% } %>
+
+    <% renderGrid('Troops', player.troops); %>
+    <% renderGrid('Heroes', player.heroes); %>
+    <% renderGrid('Spells', player.spells); %>
+  <% } %>
+</body>
+</html>
