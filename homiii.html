@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clash Stats</title>
+</head>
+<body>
+  <h1>Clash of Clans Stats</h1>
+  <input id="tag" placeholder="Player tag (no #)" />
+  <button id="go">Fetch</button>
+  <pre id="out"></pre>
+  <script>
+    document.getElementById('go').onclick = async () => {
+      const t = document.getElementById('tag').value.trim();
+      if (!t) return;
+      const res = await fetch(`/api/player/${encodeURIComponent(t)}`);
+      document.getElementById('out').textContent = await res.text();
+    }
+  </script>
+</body>
+</html>
