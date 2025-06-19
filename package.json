@@ -1,14 +1,13 @@
 {
-  "name": "clash-stats",
+  "name": "clash-ejs-tracker",
   "version": "1.0.0",
-  "description": "Clash of Clans stats tracker using Supercell API",
-  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "axios": "^1.6.8",
     "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
     "express": "^4.19.2"
   }
 }
