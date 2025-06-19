@@ -2,20 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Clash Stats</title>
+  <title>Clash of Clans Stats</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; }
+    #controls { margin-bottom: 1rem; }
+    #controls input { padding: .5rem; width: 200px; }
+    #controls button { padding: .5rem; }
+    .section { margin-top: 2rem; }
+    .section h2 { margin-bottom: .5rem; }
+    #stats { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .card {
+      background: #f8f8f8;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 120px;
+      text-align: center;
+      padding: .5rem;
+    }
+    .card img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+    }
+  </style>
 </head>
 <body>
   <h1>Clash of Clans Stats</h1>
-  <input id="tag" placeholder="Player tag (no #)" />
-  <button id="go">Fetch</button>
-  <pre id="out"></pre>
-  <script>
-    document.getElementById('go').onclick = async () => {
-      const t = document.getElementById('tag').value.trim();
-      if (!t) return;
-      const res = await fetch(`/api/player/${encodeURIComponent(t)}`);
-      document.getElementById('out').textContent = await res.text();
-    }
-  </script>
+  <div id="controls">
+    <input id="tagInput" placeholder="Player tag (no #)" />
+    <button id="fetchBtn">Fetch</button>
+  </div>
+
+  <div id="townhall" class="section"></div>
+  <div id="troops"    class="section"></div>
+  <div id="heroes"    class="section"></div>
+  <div id="equipment" class="section"></div>
+
+  <!-- load our external script -->
+  <script src="script.js" defer></script>
 </body>
 </html>
