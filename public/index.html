@@ -1,25 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Clash of Clans Stats</title>
-  <style>
-    /* … your existing styles … */
-  </style>
+  <title>Clash of Clans Tracker</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Clash of Clans Stats</h1>
-  <div id="controls">
-    <input id="tagInput" placeholder="Player tag (no #)" />
-    <button id="fetchBtn">Fetch</button>
-  </div>
+  <h1>Clash of Clans Player Stats</h1>
+  <form id="playerForm">
+    <input type="text" id="playerTag" placeholder="#8L9QJVCQ" required>
+    <button type="submit">Search</button>
+  </form>
 
-  <div id="townhall" class="section"></div>
-  <div id="troops"    class="section"></div>
-  <div id="heroes"    class="section"></div>
-  <div id="equipment" class="section"></div>
-
-  <!-- Make sure this path matches your file layout -->
-  <script src="script.js" defer></script>
+  <div id="result"></div>
+  <script src="script.js"></script>
 </body>
 </html>
