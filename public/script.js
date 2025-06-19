@@ -2,61 +2,62 @@
 
 const $ = s => document.querySelector(s);
 
-// build an icon+label card
 function makeCard(img, label) {
   const d = document.createElement('div');
   d.className = 'card';
-  d.innerHTML = `
-    <img src="${img}" onerror="this.src='';" alt="${label}" />
-    <p>${label}</p>
-  `;
+  d.innerHTML = `<img src="${img}" onerror="this.src='';" alt="${label}" /><p>${label}</p>`;
   return d;
 }
 
-// normalize: "Ice Wizard" -> "ice-wizard"
-function normalize(name) {
-  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-}
-
 async function fetchAll(tag) {
-  // 1) fetch the player JSON
-  const res = await fetch(`/api/player/${tag}`);
-  if (!res.ok) {
-    const { error } = await res.json();
-    throw new Error(error || 'Player not found');
+  // 1. fetch player data
+  const p = await fetch(`/api/player/${tag}`);
+  if (!p.ok) {
+    const err = await p.json();
+    throw new Error(err.error || 'Player not found');
   }
-  const stats = await res.json();
+  const stat = await p.json();
 
-  // — Town Hall —
+  // 2. fetch metadata
+  const [troopsMeta, heroesMeta] = await Promise.all([
+    fetch('/api/meta/troops').then(r => r.json()),
+    fetch('/api/meta/heroes').then(r => r.json())
+  ]);
+
+  // -- Town Hall --
   $('#townhall').innerHTML = '<h2>Town Hall</h2><div class="cards"></div>';
-  const thImg = `https://api-assets.clashofclans.com/townhalls/town_hall_${stats.townHallLevel}.png`;
+  const thUrl = `https://api-assets.clashofclans.com/townhalls/town_hall_${stat.townHallLevel}.png`;
   $('#townhall .cards').appendChild(
-    makeCard(thImg, `Town Hall L${stats.townHallLevel}`)
+    makeCard(thUrl, `Town Hall L${stat.townHallLevel}`)
   );
 
-  // — Troops —
+  // -- Troops --
   $('#troops').innerHTML = '<h2>Troops</h2><div class="cards"></div>';
-  stats.troops.forEach(t => {
+  stat.troops.forEach(t => {
     if (t.level > 0) {
-      const url = `https://api-assets.clashofclans.com/troops/${normalize(t.name)}.png`;
-      $('#troops .cards').appendChild(makeCard(url, `${t.name} L${t.level}`));
+      // find the matching metadata entry by name
+      const def = troopsMeta.find(x => x.name === t.name);
+      const icon = def?.iconUrls?.small || '';
+      $('#troops .cards').appendChild(makeCard(icon, `${t.name} L${t.level}`));
     }
   });
 
-  // — Heroes —
+  // -- Heroes --
   $('#heroes').innerHTML = '<h2>Heroes</h2><div class="cards"></div>';
-  stats.heroes.forEach(h => {
+  stat.heroes.forEach(h => {
     if (h.level > 0) {
-      const url = `https://api-assets.clashofclans.com/heroes/${normalize(h.name)}.png`;
-      $('#heroes .cards').appendChild(makeCard(url, `${h.name} L${h.level}`));
+      const def = heroesMeta.find(x => x.name === h.name);
+      const icon = def?.iconUrls?.small || '';
+      $('#heroes .cards').appendChild(makeCard(icon, `${h.name} L${h.level}`));
     }
   });
 
-  // — Equipment —
+  // -- Equipment (from CDN by normalized name) --
   $('#equipment').innerHTML = '<h2>Equipment</h2><div class="cards"></div>';
-  if (stats.heroEquipment?.length) {
-    stats.heroEquipment.forEach(eq => {
-      const url = `https://api-assets.clashofclans.com/equipment/${normalize(eq.name)}.png`;
+  if (stat.heroEquipment?.length) {
+    stat.heroEquipment.forEach(eq => {
+      const norm = eq.name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+      const url  = `https://api-assets.clashofclans.com/equipment/${norm}.png`;
       $('#equipment .cards').appendChild(makeCard(url, eq.name));
     });
   } else {
