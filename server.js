@@ -1,61 +1,59 @@
-// server.js
 require('dotenv').config();
 const express = require('express');
-const fetch   = require('node-fetch');
+const axios = require('axios');
+const path = require('path');
 
-const app      = express();
-const PORT     = process.env.PORT || 3000;
-const API_BASE = 'https://api.clashofclans.com/v1';
-const API_KEY  = process.env.CLASH_API_KEY;
-
-// 1) Serve your front‐end
+const app = express();
+const PORT = process.env.PORT || 3000;
 app.use(express.static('public'));
+app.use(express.json());
 
-// 2) Metadata routes (troops & heroes)
-app.get('/api/meta/troops', async (req, res) => {
+// Generate slug from name
+function slugify(name) {
+  return name.toLowerCase().replace(/ /g, '-').replace(/[^a-z0-9-]/g, '');
+}
+
+// Base URL for images from a reliable Clash of Clans asset repository
+const IMAGE_BASE = 'https://raw.githubusercontent.com/arenclash/coc-assets/main/';
+
+app.post('/player', async (req, res) => {
   try {
-    const r = await fetch(`${API_BASE}/metadata/troops`, {
-      headers: { Authorization: `Bearer ${API_KEY}` }
+    const tag = req.body.tag?.replace('#', '').toUpperCase();
+    const { data } = await axios.get(`https://api.clashofclans.com/v1/players/%23${tag}`, {
+      headers: { Authorization: `Bearer ${process.env.COC_API_TOKEN}` }
     });
-    const j = await r.json();
-    res.json(j);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+
+    // Map troops, heroes & spells with auto-generated image URLs
+    const troops = (data.troops || []).map(t => ({
+      name: t.name,
+      level: t.level,
+      image: `${IMAGE_BASE}troops/${slugify(t.name)}.png`
+    }));
+    const heroes = (data.heroes || []).map(h => ({
+      name: h.name,
+      level: h.level,
+      image: `${IMAGE_BASE}heroes/${slugify(h.name)}.png`
+    }));
+    const spells = (data.spells || []).map(s => ({
+      name: s.name,
+      level: s.level,
+      image: `${IMAGE_BASE}spells/${slugify(s.name)}.png`
+    }));
+
+    // Town Hall image
+    const townHallImage = `${IMAGE_BASE}townhalls/th${data.townHallLevel}.png`;
+
+    res.json({
+      name: data.name,
+      expLevel: data.expLevel,
+      clan: data.clan?.name || 'No Clan',
+      townHallLevel: data.townHallLevel,
+      townHallImage,
+      troops, heroes, spells
+    });
+  } catch (err) {
+    res.status(400).json({ error: 'Player not found or API error.' });
   }
 });
 
-app.get('/api/meta/heroes', async (req, res) => {
-  try {
-    const r = await fetch(`${API_BASE}/metadata/heroes`, {
-      headers: { Authorization: `Bearer ${API_KEY}` }
-    });
-    const j = await r.json();
-    res.json(j);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// 3) Player lookup
-app.get('/api/player/:tag', async (req, res) => {
-  try {
-    const raw = req.params.tag.replace(/^#/, '');
-    const tag = encodeURIComponent('#' + raw);
-    const r   = await fetch(`${API_BASE}/players/${tag}`, {
-      headers: { Authorization: `Bearer ${API_KEY}` }
-    });
-    if (!r.ok) {
-      const txt = await r.text();
-      return res.status(r.status).json({ error: txt || r.statusText });
-    }
-    const data = await r.json();
-    res.json(data);
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// 4) Start listening
-app.listen(PORT, () => {
-  console.log(`🚀 Server listening on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server listening on http://localhost:${PORT}`));
