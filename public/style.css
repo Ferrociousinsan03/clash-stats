@@ -1,56 +1,23 @@
-/* public/style.css */
 body {
-  font-family: Arial, sans-serif;
-  background: #f0f0f0;
-  padding: 2rem;
+  font-family: sans-serif;
+  margin: 2rem;
 }
-
-h1 {
-  margin-bottom: 1rem;
-}
-
-#controls {
-  margin-bottom: 2rem;
-}
-
-#controls input {
-  padding: .5rem;
-  width: 200px;
-  margin-right: .5rem;
-}
-
-#controls button {
-  padding: .5rem 1rem;
-}
-
-.section {
-  margin-top: 2rem;
-}
-
-.section h2 {
-  margin-bottom: .5rem;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: .25rem;
-}
-
-.cards {
+.search { margin-bottom: 1.5rem; }
+.grid {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
 }
-
 .card {
-  width: 100px;
+  width: 120px;
   text-align: center;
-  background: white;
-  padding: .5rem;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  padding: 0.5rem;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
 .card img {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-  margin-bottom: .25rem;
+  max-width: 64px;
+  display: block;
+  margin: 0 auto 0.5rem;
 }
+section { margin-top: 2rem; }
