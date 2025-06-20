@@ -1,39 +1,56 @@
+/* public/style.css */
 body {
-  font-family: sans-serif;
-  background: #111;
-  color: #fff;
-  text-align: center;
-  padding: 40px;
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+  padding: 2rem;
 }
-form input {
-  padding: 10px;
-  font-size: 16px;
+
+h1 {
+  margin-bottom: 1rem;
 }
-form button {
-  padding: 10px 20px;
-  margin-left: 10px;
-  background: #ffcc00;
-  border: none;
-  cursor: pointer;
+
+#controls {
+  margin-bottom: 2rem;
 }
-.grid {
+
+#controls input {
+  padding: .5rem;
+  width: 200px;
+  margin-right: .5rem;
+}
+
+#controls button {
+  padding: .5rem 1rem;
+}
+
+.section {
+  margin-top: 2rem;
+}
+
+.section h2 {
+  margin-bottom: .5rem;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: .25rem;
+}
+
+.cards {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
-  margin-top: 20px;
+  gap: 1rem;
 }
+
 .card {
-  background: #222;
-  border-radius: 10px;
-  padding: 10px;
-  width: 120px;
-  text-align: center;
-}
-.card img {
   width: 100px;
-  height: auto;
+  text-align: center;
+  background: white;
+  padding: .5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-.error {
-  color: red;
+
+.card img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  margin-bottom: .25rem;
 }
