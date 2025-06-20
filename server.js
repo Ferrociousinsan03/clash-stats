@@ -11,13 +11,16 @@ const API_BASE = 'https://api.clashofclans.com/v1';
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// serve your public folder
-app.use('/css',  express.static(path.join(__dirname, 'public/css')));
-app.use('/js',   express.static(path.join(__dirname, 'public/js')));
-app.use('/townhalls', express.static(path.join(__dirname, 'public/townhalls')));
-app.use('/troops',    express.static(path.join(__dirname, 'public/troops')));
-app.use('/heroes',    express.static(path.join(__dirname, 'public/heroes')));
-app.use('/spells',    express.static(path.join(__dirname, 'public/spells')));
+- // serve your public folder
+- app.use('/css',       express.static(path.join(__dirname, 'public/css')));
+- app.use('/js',        express.static(path.join(__dirname, 'public/js')));
+- app.use('/townhalls', express.static(path.join(__dirname, 'public/townhalls')));
+- app.use('/troops',    express.static(path.join(__dirname, 'public/troops')));
+- app.use('/heroes',    express.static(path.join(__dirname, 'public/heroes')));
+- app.use('/spells',    express.static(path.join(__dirname, 'public/spells')));
++ // serve everything in public/ at its own path
++ app.use(express.static(path.join(__dirname, 'public')));
+
 
 // render the page
 app.get('/', (req, res) => {
