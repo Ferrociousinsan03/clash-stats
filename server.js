@@ -1,37 +1,36 @@
 // server.js
 require('dotenv').config();
 const express = require('express');
-const path = require('path');
-const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
+const path    = require('path');
+const fetch   = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const CLASH_TOKEN = process.env.SUPERCELL_TOKEN;
 
 if (!CLASH_TOKEN) {
-  console.error('ERROR: Missing SUPERCELL_TOKEN in .env');
+  console.error('ERROR: missing SUPERCELL_TOKEN in .env');
   process.exit(1);
 }
 
-// 1) Views directory and EJS setup
-app.set('views', path.join(__dirname, 'view'));
+// point Express at your misspelled "veiw" folder
+app.set('views', path.join(__dirname, 'veiw'));
 app.set('view engine', 'ejs');
 
-// 2) Serve static files from public/
+// serve your static assets (script.js, style.css, images, etc)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 3) Root route → render index.ejs
+// homepage renders veiw/index.ejs
 app.get('/', (req, res) => {
   res.render('index');
 });
 
-// 4) API route → fetch player data
+// API proxy to Clash of Clans
 app.get('/api/player/:tag', async (req, res) => {
   try {
     let tag = req.params.tag.trim();
     if (!tag.startsWith('#')) tag = `#${tag}`;
-    const encoded = encodeURIComponent(tag);
-    const url = `https://api.clashofclans.com/v1/players/${encoded}`;
+    const url = `https://api.clashofclans.com/v1/players/${encodeURIComponent(tag)}`;
 
     const apiRes = await fetch(url, {
       headers: {
@@ -58,7 +57,6 @@ app.get('/api/player/:tag', async (req, res) => {
   }
 });
 
-// 5) Start the server
 app.listen(PORT, () => {
   console.log(`🚀 Server listening on port ${PORT}`);
 });
