@@ -1,23 +1,22 @@
 body {
   font-family: sans-serif;
-  margin: 2rem;
+  padding: 1rem;
 }
-.search { margin-bottom: 1.5rem; }
+h1 { margin-bottom: .5rem }
+form { margin-bottom: 2rem; }
 .grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(120px,1fr));
   gap: 1rem;
 }
 .card {
-  width: 120px;
+  background: #f7f7f7;
+  padding: .5rem;
   text-align: center;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
-  padding: 0.5rem;
-  border-radius: 8px;
+  border-radius: .25rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 .card img {
-  max-width: 64px;
-  display: block;
-  margin: 0 auto 0.5rem;
+  max-width: 60px;
+  margin-bottom: .5rem;
 }
-section { margin-top: 2rem; }
