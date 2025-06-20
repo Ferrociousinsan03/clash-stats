@@ -1,24 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <title>Clash of Clans Stats</title>
+  <meta charset="UTF-8" />
+  <title>Clash of Clans Dashboard</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
   <h1>Clash of Clans Dashboard</h1>
 
-  <div id="controls">
+  <div class="search">
     <input id="tagInput" placeholder="Player tag (no #)" />
     <button id="fetchBtn">Fetch</button>
   </div>
 
-  <div id="townhall" class="section"></div>
-  <div id="troops"    class="section"></div>
-  <div id="heroes"    class="section"></div>
-  <div id="spells"    class="section"></div>
-  <div id="equipment" class="section"></div>
+  <div id="results">
+    <!-- Town Hall -->
+    <section id="townhall">
+      <h2>Town Hall</h2>
+      <div class="grid" id="th-container"></div>
+    </section>
+    <!-- Troops -->
+    <section id="troops">
+      <h2>Troops</h2>
+      <div class="grid" id="troop-container"></div>
+    </section>
+    <!-- Heroes -->
+    <section id="heroes">
+      <h2>Heroes</h2>
+      <div class="grid" id="hero-container"></div>
+    </section>
+    <!-- Spells -->
+    <section id="spells">
+      <h2>Spells</h2>
+      <div class="grid" id="spell-container"></div>
+    </section>
+  </div>
 
-  <script src="/script.js" defer></script>
+  <script src="/script.js"></script>
 </body>
 </html>
