@@ -1,63 +1,61 @@
-document.getElementById('player-form').addEventListener('submit', async e => {
-  e.preventDefault();
-  const tag = document.getElementById('tag-input').value.trim();
-  if (!tag) return alert('Enter a tag.');
+const form  = document.getElementById('fetchForm');
+const tagIn = document.getElementById('tagInput');
+const byId  = id => document.getElementById(id);
 
-  // clear
-  for (let id of ['townhall-container','troops-container','heroes-container','spells-container']) {
-    document.getElementById(id).innerHTML = '';
-  }
+function slug(s) {
+  return s.toLowerCase()
+          .replace(/[\s\.'’]/g,'-')
+          .replace(/[^a-z0-9\-]/g,'')
+          .replace(/\-+/g,'-');
+}
+
+function card(src, text) {
+  const f = document.createElement('figure');
+  f.innerHTML = `<img src="${src}" alt="${text}"><figcaption>${text}</figcaption>`;
+  return f;
+}
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const tag = tagIn.value.trim();
+  if (!tag) return;
 
   try {
-    let { data } = await fetch(`/api/player/${tag}`).then(r => r.json());
+    const res = await fetch(`/api/player/${tag}`);
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
 
     // Town Hall
-    const th = document.createElement('div');
-    th.className = 'card';
-    let lvl = data.townHallLevel;
-    th.innerHTML = `
-      <img src="/townhalls/townhall-l${lvl}.png" />
-      <p>Town Hall L${lvl}</p>
-    `;
-    document.getElementById('townhall-container').appendChild(th);
+    const th = byId('townhall');
+    th.innerHTML = '';
+    const lvl = data.townHallLevel;
+    th.appendChild(card(`/townhall-l${lvl}.png`, `Town Hall L${lvl}`));
 
     // Troops
+    const tr = byId('troops');
+    tr.innerHTML = '';
     data.troops.forEach(t => {
-      let key = t.name.toLowerCase().replace(/\s+/g,'-');
-      let d   = document.createElement('div');
-      d.className = 'card';
-      d.innerHTML = `
-        <img src="/troops/${key}.png" />
-        <p>${t.name} L${t.level}</p>
-      `;
-      document.getElementById('troops-container').appendChild(d);
+      const name = slug(t.name);
+      tr.appendChild(card(`/${name}.png`, `${t.name} L${t.level}`));
     });
 
     // Heroes
+    const hr = byId('heroes');
+    hr.innerHTML = '';
     data.heroes.forEach(h => {
-      let key = h.name.toLowerCase().replace(/\s+/g,'-');
-      let d   = document.createElement('div');
-      d.className = 'card';
-      d.innerHTML = `
-        <img src="/heroes/${key}.png" />
-        <p>${h.name} L${h.level}</p>
-      `;
-      document.getElementById('heroes-container').appendChild(d);
+      const name = slug(h.name);
+      hr.appendChild(card(`/${name}.png`, `${h.name} L${h.level}`));
     });
 
     // Spells
+    const sp = byId('spells');
+    sp.innerHTML = '';
     data.spells.forEach(s => {
-      let key = s.name.toLowerCase().replace(/\s+/g,'-');
-      let d   = document.createElement('div');
-      d.className = 'card';
-      d.innerHTML = `
-        <img src="/spells/${key}.png" />
-        <p>${s.name} L${s.level}</p>
-      `;
-      document.getElementById('spells-container').appendChild(d);
+      const name = slug(s.name) + '-spell';
+      sp.appendChild(card(`/${name}.png`, `${s.name} L${s.level}`));
     });
 
   } catch (err) {
-    alert(err.error || 'Failed to fetch');
+    alert(err.message || 'Fetch error');
   }
 });
