@@ -1,114 +1,71 @@
-// public/script.js
-
 const $ = s => document.querySelector(s);
 
 document.addEventListener('DOMContentLoaded', () => {
-  $('#fetchBtn').addEventListener('click', () => {
-    const tag = $('#tagInput').value.trim().replace(/^#/, '');
-    if (!tag) return alert('Please enter a player tag.');
+  $('#fetchBtn').onclick = () => {
+    const raw = $('#tagInput').value.trim();
+    if (!raw) return alert('Please enter a player tag');
+    const tag = raw.replace(/^#/, '').toUpperCase();
     fetchAll(tag);
-  });
+  };
 });
-
-function makeCard(src, label) {
-  const d = document.createElement('div');
-  d.className = 'card';
-  d.innerHTML = `
-    <img src="${src}" onerror="this.src='';" alt="${label}">
-    <p>${label}</p>
-  `;
-  return d;
-}
-
-const dash = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-const under = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '_');
-
-async function safeJson(response) {
-  const text = await response.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    throw new Error(text || response.statusText);
-  }
-}
 
 async function fetchAll(tag) {
   try {
-    // 1) player
-    let r = await fetch(`/api/player/${encodeURIComponent(tag)}`);
-    if (!r.ok) {
-      const err = await safeJson(r);
-      throw new Error(err.error || 'Player not found');
-    }
-    const stat = await r.json();
+    // 1) fetch player
+    let r = await fetch(`/api/player/${tag}`);
+    let text = await r.text();
+    if (!r.ok) throw new Error(`Player ⇢ ${r.status} ${text}`);
+    const player = JSON.parse(text);
 
-    // 2) metadata
-    const [tR, hR, sR] = await Promise.all([
-      fetch('/api/meta/troops'),
-      fetch('/api/meta/heroes'),
-      fetch('/api/meta/spells')
+    // 2) fetch metadata in parallel
+    const [ troopsMeta, heroesMeta, spellsMeta ] = await Promise.all([
+      fetchMeta('troops'),
+      fetchMeta('heroes'),
+      fetchMeta('spells'),
     ]);
 
-    if (!tR.ok || !hR.ok || !sR.ok) {
-      const te = tR.ok ? null : await safeJson(tR);
-      const he = hR.ok ? null : await safeJson(hR);
-      const se = sR.ok ? null : await safeJson(sR);
-      throw new Error(te?.error || he?.error || se?.error || 'Meta load error');
-    }
+    // 3) render everything
+    renderTownHall(player.townHallLevel);
+    renderList('troop-container', player.troops, troopsMeta);
+    renderList('hero-container',  player.heroes, heroesMeta);
+    renderList('spell-container', player.spells, spellsMeta);
 
-    const troopsMeta = await tR.json();
-    const heroesMeta = await hR.json();
-    const spellsMeta = await sR.json();
-
-    // --- Town Hall ---
-    $('#townhall').innerHTML = '<h2>Town Hall</h2><div class="cards"></div>';
-    $('#townhall .cards').append(
-      makeCard(`/images/townhall_${stat.townHallLevel}.png`, `TH L${stat.townHallLevel}`)
-    );
-
-    // --- Troops ---
-    $('#troops').innerHTML = '<h2>Troops</h2><div class="cards"></div>';
-    stat.troops.forEach(t => {
-      if (t.level > 0) {
-        const def = troopsMeta.items.find(x => x.name === t.name);
-        const src = def?.iconUrls?.small || `/images/${dash(t.name)}.png`;
-        $('#troops .cards').append(makeCard(src, `${t.name} L${t.level}`));
-      }
-    });
-
-    // --- Heroes ---
-    $('#heroes').innerHTML = '<h2>Heroes</h2><div class="cards"></div>';
-    stat.heroes.forEach(h => {
-      if (h.level > 0) {
-        const def = heroesMeta.items.find(x => x.name === h.name);
-        const src = def?.iconUrls?.small || `/images/${dash(h.name)}.png`;
-        $('#heroes .cards').append(makeCard(src, `${h.name} L${h.level}`));
-      }
-    });
-
-    // --- Spells ---
-    $('#spells').innerHTML = '<h2>Spells</h2><div class="cards"></div>';
-    stat.spells.forEach(s => {
-      if (s.level > 0) {
-        const def = spellsMeta.items.find(x => x.name === s.name);
-        const src = def?.iconUrls?.small || `/images/${dash(s.name)}.png`;
-        $('#spells .cards').append(makeCard(src, `${s.name} L${s.level}`));
-      }
-    });
-
-    // --- Equipment ---
-    $('#equipment').innerHTML = '<h2>Equipment</h2><div class="cards"></div>';
-    if (stat.heroEquipment?.length) {
-      stat.heroEquipment.forEach(eq => {
-        const file = `/images/${under(eq.name)}.png`;
-        $('#equipment .cards').append(makeCard(file, eq.name));
-      });
-    } else {
-      $('#equipment .cards').innerHTML = '<p>No equipment</p>';
-    }
-
-  } catch (err) {
-    alert(err.message);
-    console.error(err);
+  } catch (e) {
+    alert(e.message);
+    console.error(e);
   }
+}
+
+async function fetchMeta(type) {
+  let r = await fetch(`/api/meta/${type}`);
+  let text = await r.text();
+  if (!r.ok) throw new Error(`Meta ${type} ⇢ ${r.status} ${text}`);
+  return JSON.parse(text);
+}
+
+function renderTownHall(level) {
+  const cnt = $('#th-container');
+  cnt.innerHTML = '';
+  const slug = `town-hall-${level}`;
+  const img  = `/images/${slug}.png`;
+  cnt.appendChild(card(slug.replace('-', ' ').toUpperCase(), `Town Hall L${level}`, img));
+}
+
+function renderList(containerId, arr, meta) {
+  const cnt = $(`#${containerId}`);
+  cnt.innerHTML = '';
+  arr.forEach(item => {
+    const info = meta.find(m => m.name === item.name);
+    const slug = info ? info.name.toLowerCase().replace(/\s+/g,'-') : 'unknown';
+    const img  = `/images/${slug}.png`;
+    cnt.appendChild(card(slug, `${item.name} L${item.level}`, img));
+  });
+}
+
+function card(id, label, imgSrc) {
+  const d = document.createElement('div');
+  d.className = 'card';
+  d.innerHTML = `<img src="${imgSrc}" alt="${id}" onerror="this.src='/images/placeholder.png'"/>
+                 <div>${label}</div>`;
+  return d;
 }
