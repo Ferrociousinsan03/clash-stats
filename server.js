@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const fetch   = require('node-fetch');
+// no `node-fetch` import—Node18+ has fetch built in
 const path    = require('path');
 
 const app      = express();
