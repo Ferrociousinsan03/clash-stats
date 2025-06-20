@@ -1,6 +1,6 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
-// no `node-fetch` import—Node18+ has fetch built in
 const path    = require('path');
 
 const app      = express();
@@ -8,29 +8,32 @@ const PORT     = process.env.PORT || 3000;
 const API_BASE = 'https://api.clashofclans.com/v1';
 const API_KEY  = process.env.CLASH_API_KEY;
 
-// 1) Serve static assets from /public
+// 1) Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 2) EJS view engine
+// 2) EJS templating
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// 3) Metadata routes
-app.get('/api/meta/troops', async (req, res) => {
-  const r = await fetch(`${API_BASE}/metadata/troops`, {
-    headers: { Authorization: `Bearer ${API_KEY}` }
+// 3) Proxy metadata endpoints
+['troops','heroes','spells'].forEach(type => {
+  app.get(`/api/meta/${type}`, async (req, res) => {
+    try {
+      const r = await fetch(`${API_BASE}/metadata/${type}`, {
+        headers: { Authorization: `Bearer ${API_KEY}` }
+      });
+      if (!r.ok) {
+        const txt = await r.text();
+        return res.status(r.status).send(txt);
+      }
+      res.json(await r.json());
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
   });
-  res.json(await r.json());
 });
 
-app.get('/api/meta/heroes', async (req, res) => {
-  const r = await fetch(`${API_BASE}/metadata/heroes`, {
-    headers: { Authorization: `Bearer ${API_KEY}` }
-  });
-  res.json(await r.json());
-});
-
-// 4) Player lookup route
+// 4) Player lookup
 app.get('/api/player/:tag', async (req, res) => {
   try {
     const raw = req.params.tag.replace(/^#/, '');
@@ -39,8 +42,8 @@ app.get('/api/player/:tag', async (req, res) => {
       headers: { Authorization: `Bearer ${API_KEY}` }
     });
     if (!r.ok) {
-      const text = await r.text();
-      return res.status(r.status).json({ error: text || r.statusText });
+      const txt = await r.text();
+      return res.status(r.status).send(txt);
     }
     res.json(await r.json());
   } catch (e) {
@@ -48,12 +51,12 @@ app.get('/api/player/:tag', async (req, res) => {
   }
 });
 
-// 5) Render the main page
+// 5) Render index
 app.get('/', (req, res) => {
   res.render('index');
 });
 
-// 6) Start server
+// 6) Launch
 app.listen(PORT, () => {
-  console.log(`Server listening on http://localhost:${PORT}`);
+  console.log(`🚀 Listening on http://localhost:${PORT}`);
 });
