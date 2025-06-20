@@ -1,51 +1,64 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
-const fetch = require('node-fetch');
 const path = require('path');
+const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const KEY   = process.env.CLASH_API_KEY;
-const BASE  = 'https://api.clashofclans.com/v1';
+const CLASH_TOKEN = process.env.SUPERCELL_TOKEN;
 
-// -- 1) Static / public
+if (!CLASH_TOKEN) {
+  console.error('ERROR: Missing SUPERCELL_TOKEN in .env');
+  process.exit(1);
+}
+
+// 1) Views directory and EJS setup
+app.set('views', path.join(__dirname, 'view'));
+app.set('view engine', 'ejs');
+
+// 2) Serve static files from public/
 app.use(express.static(path.join(__dirname, 'public')));
 
-// -- 2) View engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'view'));
-
-// -- 3) Proxy routes --
-
-// player stats
-app.get('/api/player/:tag', async (req, res) => {
-  const tag = req.params.tag.toUpperCase();
-  const url = `${BASE}/players/%23${encodeURIComponent(tag)}`;
-  const r = await fetch(url, { headers: { Authorization: `Bearer ${KEY}` } });
-  const txt = await r.text();
-  if (!r.ok) {
-    return res.status(r.status).json({ status:r.status, message: txt });
-  }
-  return res.json(JSON.parse(txt));
-});
-
-// metadata: troops / heroes / spells
-app.get('/api/meta/:type', async (req, res) => {
-  const { type } = req.params; // e.g. "troops", "heroes", "spells"
-  const url = `${BASE}/metadata/${type}`;
-  const r = await fetch(url, { headers: { Authorization: `Bearer ${KEY}` } });
-  const txt = await r.text();
-  if (!r.ok) {
-    return res.status(r.status).json({ status:r.status, message: txt });
-  }
-  // each metadata response has { items: [...] }
-  const { items } = JSON.parse(txt);
-  return res.json(items);
-});
-
-// home page
+// 3) Root route → render index.ejs
 app.get('/', (req, res) => {
   res.render('index');
 });
 
-app.listen(PORT, () => console.log(`🚀 listening on port ${PORT}`));
+// 4) API route → fetch player data
+app.get('/api/player/:tag', async (req, res) => {
+  try {
+    let tag = req.params.tag.trim();
+    if (!tag.startsWith('#')) tag = `#${tag}`;
+    const encoded = encodeURIComponent(tag);
+    const url = `https://api.clashofclans.com/v1/players/${encoded}`;
+
+    const apiRes = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${CLASH_TOKEN}`,
+        Accept:        'application/json'
+      }
+    });
+
+    if (apiRes.status === 404) {
+      return res.status(404).json({ error: 'Player not found' });
+    }
+    if (!apiRes.ok) {
+      const text = await apiRes.text();
+      console.error(`Clash API error ${apiRes.status}:`, text);
+      return res.status(apiRes.status).json({ error: 'Clash API error' });
+    }
+
+    const data = await apiRes.json();
+    res.json(data);
+
+  } catch (err) {
+    console.error('Internal error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// 5) Start the server
+app.listen(PORT, () => {
+  console.log(`🚀 Server listening on port ${PORT}`);
+});
