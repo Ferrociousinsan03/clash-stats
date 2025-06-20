@@ -2,40 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Clash of Clans Dashboard</title>
-  <link rel="stylesheet" href="/style.css" />
+  <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
-  <h1>Clash of Clans Dashboard</h1>
+  <main>
+    <h1>Clash of Clans Dashboard</h1>
 
-  <div class="search">
-    <input id="tagInput" placeholder="Player tag (no #)" />
-    <button id="fetchBtn">Fetch</button>
-  </div>
+    <form id="player-form">
+      <input
+        type="text"
+        id="tag-input"
+        placeholder="Player tag (no #)"
+        required
+      />
+      <button type="submit">Fetch</button>
+    </form>
 
-  <div id="results">
-    <!-- Town Hall -->
-    <section id="townhall">
+    <section id="town-hall">
       <h2>Town Hall</h2>
-      <div class="grid" id="th-container"></div>
+      <div id="townhall-container"></div>
     </section>
-    <!-- Troops -->
+
     <section id="troops">
       <h2>Troops</h2>
-      <div class="grid" id="troop-container"></div>
+      <div id="troops-container" class="grid"></div>
     </section>
-    <!-- Heroes -->
+
     <section id="heroes">
       <h2>Heroes</h2>
-      <div class="grid" id="hero-container"></div>
+      <div id="heroes-container" class="grid"></div>
     </section>
-    <!-- Spells -->
+
     <section id="spells">
       <h2>Spells</h2>
-      <div class="grid" id="spell-container"></div>
+      <div id="spells-container" class="grid"></div>
     </section>
-  </div>
+  </main>
 
-  <script src="/script.js"></script>
+  <script src="/js/script.js"></script>
 </body>
 </html>
