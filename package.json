@@ -1,13 +1,19 @@
 {
-  "name": "clash-ejs-tracker",
+  "name": "clash-stats",
   "version": "1.0.0",
+  "description": "Clash of Clans stats dashboard",
+  "main": "server.js",
+  "type": "commonjs",
   "scripts": {
     "start": "node server.js"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "axios": "^1.6.8",
-    "dotenv": "^16.3.1",
-    "ejs": "^3.1.9",
-    "express": "^4.19.2"
-  }
+    "dotenv": "^16.0.3",
+    "ejs": "^3.1.8",
+    "express": "^4.18.2"
+  },
+  "license": "MIT"
 }
